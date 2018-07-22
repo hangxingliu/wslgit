@@ -4,13 +4,12 @@ sudo: required
 
 os:
   - linux
-  - osx
 
 before_install:
-  - ./for-developer/ci-setup.sh
+  - ./test/__ci_setup.sh
 
 script:
-  - ./for-developer/ci-test.sh
+  - ./test/__main.sh
 
 notifications:
   email:
