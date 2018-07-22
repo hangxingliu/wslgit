@@ -1,0 +1,18 @@
+language: bash
+
+sudo: required
+
+os:
+  - linux
+  - osx
+
+before_install:
+  - ./for-developer/ci-setup.sh
+
+script:
+  - ./for-developer/ci-test.sh
+
+notifications:
+  email:
+    on_success: never
+    on_failure: always
