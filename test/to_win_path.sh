@@ -17,7 +17,7 @@ function main() {
 }
 
 function awk_test() {
-	echo "$2" | gawk -f "$AWK_FILE" | 
+	echo "$2" | awk -f "$AWK_FILE" | 
 		gawk -v expected="$3" -v name="$1" '
 			{ actual = $0; } 
 			END {

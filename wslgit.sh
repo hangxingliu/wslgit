@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 
+AWK="awk"
+[[ -n `which gawk` ]] && AWK="gawk"
+
 function to_unix_path() {
-	gawk '{
+	$AWK '{
 		is_win_path = index($0, ":\\");
 		if(is_win_path != 2) {
 			print $0;
@@ -20,7 +23,7 @@ function to_unix_path() {
 }
 
 function to_win_path() {
-	gawk '{
+	$AWK '{
 		print gensub(/\/mnt\/([A-Za-z])(\/\S*)/, "\\1:\\2", "g");
 	}';
 }
