@@ -50,11 +50,50 @@ function to_unix_path_by_awk() {
 	}';
 }
 
-function to_win_path() {
-	$AWK '{
-		print gensub(/\/mnt\/([A-Za-z])(\/\S*)/, "\\1:\\2", "g");
-	}';
+function to_win_path_by_wslpath() {
+	local win_path;
+	win_path="$(wslpath -w "$1" 2>/dev/null)";
+	# empty output means it is not a Linux path
+	if [[ -n "$win_path" ]]; then
+		echo "$win_path";
+	fi
 }
+
+function to_win_path_by_awk() {
+	echo "$1" | $AWK -v mount_list="$(mount -t drvfs)" '
+		BEGIN {
+			split(mount_list, mount_array, "\n");
+			replace_index = 1;
+			for(key in mount_array) {
+				split(mount_array[key], parts, "type drvfs");
+				if(parts[1]) {
+					part1 = parts[1];
+					border = index(part1, "on");
+					if(border > 1) {
+						drive = substr(part1, 1, border - 1);
+						mount_to = substr(part1, border + 3); # +3 => +2+1(1 more space character)
+
+						gsub(/^\s/, "", drive);    gsub(/\s$/, "", drive);
+						gsub(/^\s/, "", mount_to); gsub(/\s$/, "", mount_to);
+
+						replace_from[replace_index] = mount_to;
+						replace_to[replace_index++] = drive;
+					}
+				}
+			}
+		}
+		{
+			for(i = 1; i < replace_index ; i ++ )
+				gsub(replace_from[i], replace_to[i]);
+			print $0;
+		}';
+}
+
+# function to_win_path_by_awk_old() {
+#   $AWK '{
+#     print gensub(/\/mnt\/([A-Za-z])(\/\S*)/, "\\1:\\2", "g");
+#   }';
+# }
 
 # usage: is_contains "$find" "$item1" "$item2" ...
 function is_contains() {
@@ -105,10 +144,26 @@ for argument in "$@"; do
 done
 
 # execute git
+function execut_git() { git "${git_arguments[@]}" <&0; return $?; }
+
 if [[ "$convert_output" == "true" ]]; then
-	git "${git_arguments[@]}" <&0 | to_win_path;
+	# save stdout of git to bash variable
+	git_stdout="$(execut_git)";
+
+	if [[ $HAS_WSLPATH == 0 ]]; then
+		# test is the output of git only a Linux path
+		fixed_stdout="$(to_win_path_by_wslpath "$git_stdout")";
+	fi
+
+	if [[ -n "$fixed_stdout" ]]; then
+		# if the stdout of git only contains a linux path then just convert is by wslpath
+		echo "$fixed_stdout";
+	else
+		# else convert linux path by awk following mount list `mount -t drvfs`
+		echo "$(to_win_path_by_awk "$git_stdout")";
+	fi
 else
-	git "${git_arguments[@]}" <&0;
+	execut_git;
 fi
 
 # set exit code same with git exited code

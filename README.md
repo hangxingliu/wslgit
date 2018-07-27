@@ -23,7 +23,9 @@ The project was inspired by [A. R. S.](https://github.com/andy-5)'s project [and
 
 1. Transfer git invoking from Windows batch file `git.bat` to `wslgit.sh` located in WSL.
 2. Convert Windows path in parameters to Linux path by `wslpath` or `awk`
-3. Convert Linux path in git output back to Windows path.  
+3. Convert Linux path in git output back to Windows path.
+	- Convert path by `wslpath` if git output only contains one Linux path
+	- Otherwise, convert path by `awk` following WSL mounted `drvfs` list (`mount -t drvfs`)
 
 ## Author
 
