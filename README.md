@@ -19,6 +19,12 @@ The project was inspired by [A. R. S.](https://github.com/andy-5)'s project [and
 }
 ```
 
+## Principles
+
+1. Transfer git invoking from Windows batch file `git.bat` to `wslgit.sh` located in WSL.
+2. Convert Windows path in parameters to Linux path by `wslpath` or `awk`
+3. Convert Linux path in git output back to Windows path.  
+
 ## Author
 
 [LiuYue (hangxingliu)](https://github.com/hangxingliu)

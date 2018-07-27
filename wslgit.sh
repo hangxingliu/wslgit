@@ -1,9 +1,37 @@
 #!/usr/bin/env bash
 
-AWK="awk"
-[[ -n `which gawk` ]] && AWK="gawk"
+#  Update: 2018-07-27
+#  Author: Liu Yue (hangxingliu@gmail.com)
+#
+#  Description:
+#    convert parameters from Windows path to Linux path by `wslpath` or `awk` if the parameter is a path
+#    and launch git by given parameters and convert Linux path in git output to Windows path
+#
 
-function to_unix_path() {
+# set default awk ve
+
+# detect is `wslpath` in your WSL
+test -n `which wslpath`;
+HAS_WSLPATH=$?;
+
+# if `wslpath` is not installed then use `awk` or `gawk`
+AWK="awk";
+if [[ $HAS_WSLPATH != 0 ]]; then
+	[[ -n `which gawk` ]] && AWK="gawk";
+fi
+
+function to_unix_path_by_wslpath() {
+	local unix_path;
+	unix_path="$(wslpath "$1" 2>/dev/null)";
+	# empty output means it is not a Linux path
+	if [[ -z "$unix_path" ]]; then
+		echo "$1";
+	else
+		echo "$unix_path";
+	fi
+}
+
+function to_unix_path_by_awk() {
 	$AWK '{
 		is_win_path = index($0, ":\\");
 		if(is_win_path != 2) {
@@ -40,33 +68,48 @@ function is_contains() {
 }
 
 # log for debug
+# ======================
 # __dirname="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # __now="$(date "+%y-%m-%d %H:%M:%S")"
-# echo "${__now} $@" >> "$__dirname/wslgit.log";
+# __logfile="$__dirname/wslgit.log";
+# echo "${__now} $@" >> "$__logfile";
+# ======================
 
-git_stdin="/dev/stdin";
-if is_contains "--version" "$@"; then
-	git_stdin="/dev/zero";
-fi
 
+# snippets for resolved Windows 10 1709 git hanging bug.
+#   reference from https://github.com/andy-5/wslgit/blob/master/src/main.rs
+# ======================
+# git_stdin="/dev/stdin";
+# if is_contains "--version" "$@"; then
+# 	git_stdin="/dev/zero";
+# fi
+# ======================
+
+# only convert stdout when parameters included `rev-parse` or `remote`
 convert_output=false;
 if is_contains "rev-parse" "$@" || is_contains "remote" "$@"; then
 	convert_output=true;
 fi
 
-#git_arguments;
+# convert each parameters to new array `git_arguments`
 argument_count=0;
 for argument in "$@"; do
-	git_arguments[$argument_count]="$(echo "$argument" | to_unix_path)";
+	if [[ $HAS_WSLPATH == 0 ]]; then
+		# by wslpath
+		git_arguments[$argument_count]="$(to_unix_path_by_wslpath "$argument")";
+	else
+		# by awk/gawk
+		git_arguments[$argument_count]="$(echo "$argument" | to_unix_path)";
+	fi
 	argument_count=$(($argument_count+1));
 done
 
-# echo "${git_arguments[@]}";
-
+# execute git
 if [[ "$convert_output" == "true" ]]; then
 	git "${git_arguments[@]}" <&0 | to_win_path;
 else
 	git "${git_arguments[@]}" <&0;
 fi
 
+# set exit code same with git exited code
 exit $?;
