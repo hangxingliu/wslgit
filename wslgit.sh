@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  Update: 2018-07-27
+#  Update: 2018-07-28
 #  Author: Liu Yue (hangxingliu@gmail.com)
 #
 #  Description:
@@ -25,9 +25,9 @@ function to_unix_path_by_wslpath() {
 	unix_path="$(wslpath "$1" 2>/dev/null)";
 	# empty output means it is not a Linux path
 	if [[ -z "$unix_path" ]]; then
-		echo "$1";
+		printf "%s" "$1";
 	else
-		echo "$unix_path";
+		printf "%s" "$unix_path";
 	fi
 }
 
@@ -55,12 +55,12 @@ function to_win_path_by_wslpath() {
 	win_path="$(wslpath -w "$1" 2>/dev/null)";
 	# empty output means it is not a Linux path
 	if [[ -n "$win_path" ]]; then
-		echo "$win_path";
+		printf "%s" "$win_path";
 	fi
 }
 
 function to_win_path_by_awk() {
-	echo "$1" | $AWK -v mount_list="$(mount -t drvfs)" '
+	printf "%s" "$1" | $AWK -v mount_list="$(mount -t drvfs)" '
 		BEGIN {
 			split(mount_list, mount_array, "\n");
 			replace_index = 1;
@@ -138,10 +138,17 @@ for argument in "$@"; do
 		git_arguments[$argument_count]="$(to_unix_path_by_wslpath "$argument")";
 	else
 		# by awk/gawk
-		git_arguments[$argument_count]="$(echo "$argument" | to_unix_path)";
+		git_arguments[$argument_count]="$(printf "%s" "$argument" | to_unix_path)";
 	fi
 	argument_count=$(($argument_count+1));
 done
+
+# log for debug
+# ======================
+# echo "${__now} ${git_arguments[@]}" >> "$__logfile";
+# echo "${__now} argument count: $argument_count" >> "$__logfile";
+# echo "=============" >> "$__logfile";
+# ======================
 
 # execute git
 function execut_git() { git "${git_arguments[@]}" <&0; return $?; }
@@ -157,10 +164,10 @@ if [[ "$convert_output" == "true" ]]; then
 
 	if [[ -n "$fixed_stdout" ]]; then
 		# if the stdout of git only contains a linux path then just convert is by wslpath
-		echo "$fixed_stdout";
+		printf "%s" "$fixed_stdout";
 	else
 		# else convert linux path by awk following mount list `mount -t drvfs`
-		echo "$(to_win_path_by_awk "$git_stdout")";
+		printf "%s" "$(to_win_path_by_awk "$git_stdout")";
 	fi
 else
 	execut_git;
