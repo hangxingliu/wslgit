@@ -20,4 +20,4 @@ setlocal enabledelayedexpansion
 set args=%*
 set "args=%args:\=\\%"
 
-bash -c 'wslgit.sh %args%'
+wsl wslgit.sh %args%
