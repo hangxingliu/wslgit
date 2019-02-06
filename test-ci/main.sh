@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 
 throw() { echo -e "$RED[-] failed: $1$RESET"; exit 1; }
-clean-tmp() { rm tmp*.log tmp*.zip tmp-test-repo -r; }
+clean-tmp() {
+	rm -f tmp*.*;
+	[[ -d "tmp-test-repo/.git" ]] && rm -rf tmp-test-repo;
+}
 setup-color() {
 	if [[ -t 1 ]] && [[ "$(tput colors)" -ge 8 ]]; then
 		BOLD="\x1b[1m"; RED="\x1b[31m"; GREEN="\x1b[32m"; RESET="\x1b[0m";
