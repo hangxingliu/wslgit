@@ -3,3 +3,10 @@
 
 # mountpoint
 mount
+
+# archive files
+*.zip
+*.tar
+
+# Node.js
+node_modules
