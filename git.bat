@@ -23,15 +23,17 @@ rem
 
 setlocal enabledelayedexpansion
 
+set "currentdir=%cd:\=\\%"
+
 if [%1] == [] goto WITHOUT_ARGS
 
 :WITH_ARGS
 	set args=%*
 	set "args=%args:\=\\%"
 
-	wsl wslgit.sh %args%
+	wsl env "WSLGIT_SH_CWD=%currentdir%" wslgit.sh %args%
 	exit /b %errorlevel%
 
 :WITHOUT_ARGS
-	wsl wslgit.sh
+	wsl env "WSLGIT_SH_CWD=%currentdir%" wslgit.sh
 	exit /b %errorlevel%

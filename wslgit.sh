@@ -1,174 +1,184 @@
 #!/usr/bin/env bash
 
-#  Update: 2018-07-28
-#  Author: Liu Yue (hangxingliu@gmail.com)
+# =========================================
+#  Name:    wslgit.sh
+#  Update:  2018-02-06
+#  License: GPL-3.0
+#  Author:  Liu Yue (hangxingliu@gmail.com)
 #
 #  Description:
-#    convert parameters from Windows path to Linux path by `wslpath` or `awk` if the parameter is a path
-#    and launch git by given parameters and convert Linux path in git output to Windows path
-#
+#    Convert the Windows path contained in the arguments to Linux(WSL) path,
+#       and convert the Linux(WSL) path in output of git to Windows path.
+#    This script use `mount` command, awk scripts to implement above features.
+#       I retained the implementation via `wslpath` codes in this script for
+#       reference purposes only. (because wslpath has some shortcomings to
+#       implement it)
+# ==========================================
 
-# set default awk ve
+# Switch to enable/disable generate log file for debugging
+WSLGIT_SH_LOG=${WSLGIT_SH_LOG:-false};
+# WSLGIT_SH_LOG=${WSLGIT_SH_LOG:-true};
 
-# detect is `wslpath` in your WSL
-test -n `which wslpath`;
-HAS_WSLPATH=$?;
+# Check is `wslpath` existed in the system
+# https://blogs.msdn.microsoft.com/commandline/2018/03/07/windows10v1803/
+# [[ -n `which wslpath` ]] && HAS_WSLPATH=true;
 
-# if `wslpath` is not installed then use `awk` or `gawk`
-AWK="awk";
-if [[ $HAS_WSLPATH != 0 ]]; then
-	[[ -n `which gawk` ]] && AWK="gawk";
-fi
+# Use gawk by default
+AWK="$(which gawk)";
+[[ -z "$AWK" ]] && AWK="$(which awk)";
+[[ -z "$AWK" ]] && echo "fatal: \"awk\" is not installed in WSL!" >&2 && exit 1;
 
-function to_unix_path_by_wslpath() {
-	local unix_path;
-	unix_path="$(wslpath "$1" 2>/dev/null)";
-	# empty output means it is not a Linux path
-	if [[ -z "$unix_path" ]]; then
-		printf "%s" "$1";
-	else
-		printf "%s" "$unix_path";
-	fi
-}
+# ==========================================
+# Iterate mounted drvfs (Windows drives) and save as multiline string
+# Example output of `mount -d drvfs`:
+#   D: on /tmp/wslgit-test-mount type drvfs (rw,relatime,umask=22,fmask=11)
+# Example result of this function
+#   C:
+#   /mnt/c
+#   D:
+#   /tmp/wslgit-test-mount
+function get_mounted_drvfs() {
+	mount -t drvfs | awk '{
+		if(split($0, lr, "type drvfs") < 2) next;
+		if(split(lr[1], part, "on") < 2) next;
 
-function to_unix_path_by_awk() {
-	$AWK '{
-		is_win_path = index($0, ":\\");
-		if(is_win_path != 2) {
-			print $0;
-			exit;
-		}
-
-		part1 = "/mnt/" tolower(substr($0, 1, 1));
-		part2 = substr($0, 3);
-
-		gsub(/\\/, "/", part2);
-		gsub("//", "/", part2);
-
-		print part1 part2;
-		exit;
+		drive = part[1];     gsub(/^\s/, "", drive);    gsub(/\s$/, "", drive);
+		mount_to = part[2];  gsub(/^\s/, "", mount_to); gsub(/\s$/, "", mount_to);
+		print toupper(drive) "\n" mount_to;
 	}';
 }
+MOUNTED_DRVFS="$(get_mounted_drvfs)";
+# echo -e "$MOUNTED_DRVFS";
 
+# ==========================================
+# An implementation of path convertor via wslpath
+# Why not use this implementation:
+#   It can not convert the path which be mounted manually correctly
+#   Get details info in the test "shortcomings of wslpath" in the file ./test-win/main.js
+function to_unix_path_by_wslpath() {
+	local unix_path;
+	unix_path="$(wslpath "$1" 2>/dev/null)"; # empty output means it is not a Linux path
+	[[ -n "$unix_path" ]] && printf "%s" "$unix_path" || printf "%s" "$1";
+}
 function to_win_path_by_wslpath() {
 	local win_path;
-	win_path="$(wslpath -w "$1" 2>/dev/null)";
-	# empty output means it is not a Linux path
-	if [[ -n "$win_path" ]]; then
-		printf "%s" "$win_path";
-	fi
+	win_path="$(wslpath -w "$1" 2>/dev/null)"; # empty output means it is not a Linux path
+	[[ -n "$win_path" ]] && printf "%s" "$win_path";
 }
 
-function to_win_path_by_awk() {
-	printf "%s" "$1" | $AWK -v mount_list="$(mount -t drvfs)" '
-		BEGIN {
-			split(mount_list, mount_array, "\n");
-			replace_index = 1;
-			for(key in mount_array) {
-				split(mount_array[key], parts, "type drvfs");
-				if(parts[1]) {
-					part1 = parts[1];
-					border = index(part1, "on");
-					if(border > 1) {
-						drive = substr(part1, 1, border - 1);
-						mount_to = substr(part1, border + 3); # +3 => +2+1(1 more space character)
 
-						gsub(/^\s/, "", drive);    gsub(/\s$/, "", drive);
-						gsub(/^\s/, "", mount_to); gsub(/\s$/, "", mount_to);
-
-						replace_from[replace_index] = mount_to;
-						replace_to[replace_index++] = drive;
-					}
+# ==========================================
+# An implementation of path convertor via awk scripts and `mount` command
+#
+# Usage: to_unix_path_by_awk "$path"
+function to_unix_path_by_awk() {
+	# Awk script description:
+	# If a line is starts like "C:\\", "D:\\", ...
+	#   then find the correct path mapping from system mount info
+	#   and replace the slash('\\') in path to back slash('/').
+	# Else print line as normal
+	# The result of `toupper(substr($0, 1, 2));` looks like: "C:", "D:", ...
+	printf "%s" "$1"  |
+		"$AWK" -v _mount="$MOUNTED_DRVFS" 'BEGIN { mount_len = split(_mount, mount_list, "\n"); }
+		{
+			if(index($0, ":\\") == 2) {
+				driver = toupper(substr($0, 1, 2));
+				for(i = 1; i <= mount_len ; i += 2 ) {
+					if(driver != mount_list[i]) continue;
+					suffix = substr($0, 3); gsub(/\\/, "/", suffix); gsub("//", "/", suffix);
+					print mount_list[i+1] suffix;
+					exit;
 				}
 			}
-		}
+			print $0;
+			exit;
+		}';
+}
+# Usage: echo "$content_included_unix_path" | to_win_path_by_awk
+function to_win_path_by_awk() {
+	"$AWK" -v _mount="$MOUNTED_DRVFS" 'BEGIN { mount_len = split(_mount, mount_list, "\n"); }
 		{
-			for(i = 1; i < replace_index ; i ++ )
-				gsub(replace_from[i], replace_to[i]);
+			for(i = 1; i <= mount_len ; i += 2 ) {
+				if(gsub(mount_list[i+1], mount_list[i]) > 0) {
+					gsub("/", "\\");
+					break;
+				}
+			}
 			print $0;
 		}';
 }
 
-# function to_win_path_by_awk_old() {
-#   $AWK '{
-#     print gensub(/\/mnt\/([A-Za-z])(\/\S*)/, "\\1:\\2", "g");
-#   }';
-# }
+# ==================_=======================
+#   _ __ ___   __ _(_)_ __
+#  | '_ ` _ \ / _` | | '_ \
+#  | | | | | | (_| | | | | |
+#  |_| |_| |_|\__,_|_|_| |_|
+# ==========================================
 
-# usage: is_contains "$find" "$item1" "$item2" ...
-function is_contains() {
-	local it;
-	for it in "${@:2}"; do
-		if [[ "$it" == "$1" ]]; then
-			return 0;
-		fi
-	done
-	return 1;
-}
-
-# log for debug
-# ======================
-# __dirname="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-# __now="$(date "+%y-%m-%d %H:%M:%S")"
-# __logfile="$__dirname/wslgit.log";
-# echo "${__now} $@" >> "$__logfile";
-# ======================
-
-
-# snippets for resolved Windows 10 1709 git hanging bug.
-#   reference from https://github.com/andy-5/wslgit/blob/master/src/main.rs
-# ======================
-# git_stdin="/dev/stdin";
-# if is_contains "--version" "$@"; then
-# 	git_stdin="/dev/zero";
-# fi
-# ======================
-
-# only convert stdout when parameters included `rev-parse` or `remote`
-convert_output=false;
-if is_contains "rev-parse" "$@" || is_contains "remote" "$@"; then
-	convert_output=true;
+# Log for debugging
+if [[ "$WSLGIT_SH_LOG" != false ]]; then
+	log_file="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/wslgit.log";
+	echo ">>> $(date "+%y-%m-%d %H:%M:%S")" >> "$log_file";
+	echo "WSLGIT_SH_CWD: ${WSLGIT_SH_CWD}" >> "$log_file";
+	echo "Arguments:" >> "$log_file"
+	for arg in "$@"; do echo "  $arg" >> "$log_file"; done
 fi
 
-# convert each parameters to new array `git_arguments`
-argument_count=0;
-for argument in "$@"; do
-	if [[ $HAS_WSLPATH == 0 ]]; then
-		# by wslpath
-		git_arguments[$argument_count]="$(to_unix_path_by_wslpath "$argument")";
-	else
-		# by awk/gawk
-		git_arguments[$argument_count]="$(printf "%s" "$argument" | to_unix_path)";
+# Fix cwd(currency working directory) by environmnt variable WSLGIT_SH_CWD
+# Sample case:
+#   You mount drive D: manually on /mnt/d. Then you use `git.bat` on drive D:
+#   The cwd of wsl will be user home directory because wsl can not handler cwd correctly
+if [[ -n "$WSLGIT_SH_CWD" ]]; then
+	correct_cwd="$(to_unix_path_by_awk "$WSLGIT_SH_CWD")";
+	cd "$correct_cwd";
+	[[ "$?" != 0 ]] && echo "fatal: can not cd to ${WSLGIT_SH_CWD} ($correct_cwd)" >&2 && exit 1;
+fi
+
+# Snippets for resolved Windows 10 1709 git hanging bug.
+#   reference from https://github.com/andy-5/wslgit/blob/master/src/main.rs
+# >>>
+# git_stdin="/dev/stdin";
+# for arg in "${@}"; do [[ "$arg" == "--version" ]] && git_stdin="/dev/zero"; done
+# <<<
+
+
+# Convert each arguments to new array `git_args`
+# And used to check should output of git need convert
+argv=0;
+convert_output=false;
+after_double_dash=false;
+for arg in "$@"; do
+	if [[ "$after_double_dash" != true ]]; then
+		if [[ "$arg" == "rev-parse" ]] || [[ "$arg" == "remote" ]]; then
+			convert_output=true;
+		fi
+		# convert long form argument
+		if [[ "$arg" == --*=* ]]; then
+			prefix="${arg%%=*}";
+			file_path="${arg#*=}";
+			git_args[$argv]="${prefix}=$(to_unix_path_by_awk "$file_path")";
+			argv=$(($argv+1));
+			continue;
+		fi
 	fi
-	argument_count=$(($argument_count+1));
+	[[ "$arg" == "--" ]] && after_double_dash=true;
+
+	git_args[$argv]="$(to_unix_path_by_awk "$arg")";
+	argv=$(($argv+1));
 done
 
-# log for debug
-# ======================
-# echo "${__now} ${git_arguments[@]}" >> "$__logfile";
-# echo "${__now} argument count: $argument_count" >> "$__logfile";
-# echo "=============" >> "$__logfile";
-# ======================
+# Log for debugging
+if [[ "$WSLGIT_SH_LOG" != false ]]; then
+	echo "cwd: $(pwd)" >> "$log_file";
+	echo "Converted arguments:" >> "$log_file";
+	for arg in "${git_args[@]}"; do echo "  $arg" >> "$log_file"; done
+	echo "<<<" >> "$log_file";
+fi
 
-# execute git
-function execut_git() { git "${git_arguments[@]}" <&0; return $?; }
-
-if [[ "$convert_output" == "true" ]]; then
-	# save stdout of git to bash variable
-	git_stdout="$(execut_git)";
-
-	if [[ $HAS_WSLPATH == 0 ]]; then
-		# test is the output of git only a Linux path
-		fixed_stdout="$(to_win_path_by_wslpath "$git_stdout")";
-	fi
-
-	if [[ -n "$fixed_stdout" ]]; then
-		# if the stdout of git only contains a linux path then just convert is by wslpath
-		printf "%s" "$fixed_stdout";
-	else
-		# else convert linux path by awk following mount list `mount -t drvfs`
-		printf "%s" "$(to_win_path_by_awk "$git_stdout")";
-	fi
+# Execute git with git_args
+function execut_git() { git "${git_args[@]}" <&0; return $?; }
+if [[ "$convert_output" == true ]]; then
+	execut_git | to_win_path_by_awk;
 else
 	execut_git;
 fi
