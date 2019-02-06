@@ -39,6 +39,9 @@ setup-color;
 pushd "$_CWD" || throw;
 clean-tmp;
 
+echo -e "$BOLD[.] test bash snippets $RESET";
+./bash-snippets/is-contains.sh || throw;
+
 echo -e "$BOLD[.] generate tmp.sh (C: => ${_PROJECT_DIR})$RESET";
 generate-wslgit "	echo 'C:\n$_PROJECT_DIR'";
 
