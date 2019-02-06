@@ -6,10 +6,10 @@ os:
   - linux
 
 before_install:
-  - ./test/__ci_setup.sh
+  - ./test-ci/setup.sh
 
 script:
-  - ./test/__main.sh
+  - ./test-ci/main.sh
 
 notifications:
   email:

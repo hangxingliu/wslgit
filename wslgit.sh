@@ -38,6 +38,9 @@ AWK="$(which gawk)";
 #   D:
 #   /tmp/wslgit-test-mount
 function get_mounted_drvfs() {
+	# region need-to-be-replaced-in-unit-test
+	#     The previous line is used for mark the following statments
+	#     need to be replaced to other implementation for unit test (travis-CI)
 	mount -t drvfs | awk '{
 		if(split($0, lr, "type drvfs") < 2) next;
 		if(split(lr[1], part, "on") < 2) next;
@@ -46,6 +49,7 @@ function get_mounted_drvfs() {
 		mount_to = part[2];  gsub(/^\s/, "", mount_to); gsub(/\s$/, "", mount_to);
 		print toupper(drive) "\n" mount_to;
 	}';
+	# endregion need-to-be-replaced-in-unit-test
 }
 MOUNTED_DRVFS="$(get_mounted_drvfs)";
 # echo -e "$MOUNTED_DRVFS";
