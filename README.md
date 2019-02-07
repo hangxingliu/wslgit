@@ -4,7 +4,8 @@
 
 Use Git installed in WSL(windows Subsystem for Linux) from Windows and Visual Studio Code.
 
-The project was inspired by [A. R. S.](https://github.com/andy-5)'s project [andy-5/wslgit](https://github.com/andy-5/wslgit) written by Rust.
+The project was inspired by [A. R. S.](https://github.com/andy-5)'s project [andy-5/wslgit](https://github.com/andy-5/wslgit) written by Rust.   
+But why do I re-implement it by scripts, because I hope the wslgit tools could support any mount points (but not only under the `/mnt/`) and could be used without compiling.
 
 ## Usage
 
@@ -62,7 +63,7 @@ The project was inspired by [A. R. S.](https://github.com/andy-5)'s project [and
 
 ## Author
 
-[LiuYue (hangxingliu)](https://github.com/hangxingliu)
+[LiuYue (@hangxingliu)](https://github.com/hangxingliu)
 
 ## License
 
