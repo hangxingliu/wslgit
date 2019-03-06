@@ -17,7 +17,7 @@ setup-color-variables() {
 }
 print-test-header() {
 	[[ -z "$test_counter" ]] && test_counter=1;
-	printf "$BOLD[.] test 0x%x: %s$RESET\n" "$test_counter" "$1";
+	printf "$BOLD[.] test 0x%02x: %s$RESET\n" "$test_counter" "$1";
 	test_counter=$(($test_counter+1));
 }
 assert-expected-actual() {
@@ -60,9 +60,8 @@ main() {
 	[[ -n "$(which mawk)" ]] || throw "mawk is not installed!";
 
 	echo -e "$BOLD[.] test bash snippets $RESET";
-	./bash-snippets/is-contains.sh || throw;
-	./bash-snippets/drvfs-list-with-mawk.sh || throw;
-	exit;
+	bash ./bash-snippets/is-contains.sh || throw;
+	bash ./bash-snippets/drvfs-list-with-mawk.sh || throw;
 
 	echo -e "$BOLD[.] generate tmp.sh (gawk, C: => ${_PROJECT_DIR})$RESET";
 	generate-wslgit-with-mock-mount-info  "	echo 'C:\n$_PROJECT_DIR'";
