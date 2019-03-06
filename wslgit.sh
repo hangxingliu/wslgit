@@ -2,7 +2,7 @@
 
 # =========================================
 #  Name:    wslgit.sh
-#  Update:  2019-02-08
+#  Update:  2019-03-06
 #  License: GPL-3.0
 #  Author:  Liu Yue (hangxingliu@gmail.com)
 #
@@ -41,12 +41,13 @@ function get_mounted_drvfs() {
 	# region need-to-be-replaced-in-unit-test
 	#     The previous line is used for mark the following statments
 	#     need to be replaced to other implementation for unit test (travis-CI)
-	mount -t drvfs | awk '{
+	mount -t drvfs | "$AWK" '
+	function trim(s) { gsub(/^[ \t]+/, "", s); gsub(/[ \t]+$/, "", s); return s; }
+	{
 		if(split($0, lr, "type drvfs") < 2) next;
 		if(split(lr[1], part, "on") < 2) next;
 
-		drive = part[1];     gsub(/^\s/, "", drive);    gsub(/\s$/, "", drive);
-		mount_to = part[2];  gsub(/^\s/, "", mount_to); gsub(/\s$/, "", mount_to);
+		drive = trim(part[1]); mount_to = trim(part[2]);
 		print toupper(drive) "\n" mount_to;
 	}';
 	# endregion need-to-be-replaced-in-unit-test
