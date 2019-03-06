@@ -29,7 +29,7 @@ expected="$(expected_result)"
 actual="$(get_mounted_drvfs)";
 
 echo "mock mount result: \"$(mock_mount_drvfs)\"";
-[[ "$expected" == "$actual" ]] && exit 1;
+[[ "$expected" == "$actual" ]] && exit 0;
 
 echo "fatal: result of get_mounted_drvfs(mawk) is bad";
 echo ">>>>>>>>>>>>>";
