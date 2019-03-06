@@ -93,7 +93,7 @@ start-test() {
 	assert-expected-actual;
 
 	print-test-header "git init";
-	if [[ -d tmp-test-repo ]]; then rm -r tmp-test-repo || throw; fi
+	if [[ -d tmp-test-repo ]]; then rm -rf tmp-test-repo || throw; fi
 	mkdir -p tmp-test-repo || throw;
 	pushd "tmp-test-repo" || throw;
 	../tmp.sh init || throw;

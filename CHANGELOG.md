@@ -1,5 +1,10 @@
 # Changelog
 
+### 2019-03-06
+
+1. Fixed the error when the default awk in system is `mawk`
+	- Related issue: <https://github.com/hangxingliu/wslgit/issues/8> (Thank @joaopluigi)
+
 ### 2019-02-08
 
 1. Replaced WSL launch command from `bash` to `wsl`
