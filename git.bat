@@ -45,7 +45,7 @@ if [%1] == [] goto WITHOUT_ARGS
 	exit /b %errorlevel%
 
 :WITHOUT_ARGS
-	if %interactive% == true (
+	if %bashic% == true (
 		wsl bash -ic 'env "WSLGIT_SH_CWD=%currentdir%" wslgit.sh'
 	) else (
 		wsl env "WSLGIT_SH_CWD=%currentdir%" wslgit.sh

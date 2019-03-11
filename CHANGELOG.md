@@ -1,5 +1,13 @@
 # Changelog
 
+### 2019-03-11
+
+1. **BREAKING CHANGE:** Start git installed in WSL in interactive mode. 
+	- If you want to use non-interactive mode, **just like before**: Set Windows env variable `WSLGIT_USE_INTERACTIVE_SHELL` to `true`.
+2. Fixed error in the unix path to win path convert function.
+	- Related issue: <https://github.com/hangxingliu/wslgit/issues/11> (Thanks @rennex)
+3. Added path converting for the output of `git init`
+
 ### 2019-03-06
 
 1. Fixed the error when the default awk in system is `mawk`

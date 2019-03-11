@@ -19,24 +19,38 @@ But why do I re-implement it by scripts, because I hope the wslgit tools could s
 }
 ```
 
+### 🐢 Feeling slowly? (Disable interactive shell)
+
+wslgit launch git installed in WSL in interactive shell mode by default now.   
+In short, the `ssh-agent` setup in `.bashrc` script is supported. but slower then non-interactive mode.
+
+If you want disable interactive shell to reduce launch time, you can set Windows environment variable `WSLGIT_USE_INTERACTIVE_SHELL` to `false`.
+
+#### via GUI
+
+![Set up environment variable](assets/env.png)
+
+#### via Powershell
+
+``` powershell
+[System.Environment]::SetEnvironmentVariable("WSLGIT_USE_INTERACTIVE_SHELL", "false", "User")
+```
+
+
 ## Update
+
+### 2019-03-11
+
+1. **BREAKING CHANGE:** Start git installed in WSL in interactive mode. 
+	- If you want to use non-interactive mode, **just like before**: Set Windows env variable `WSLGIT_USE_INTERACTIVE_SHELL` to `true`.
+2. Fixed error in the unix path to win path convert function.
+	- Related issue: <https://github.com/hangxingliu/wslgit/issues/11> (Thanks @rennex)
+3. Added path converting for the output of `git init`
 
 ### 2019-03-06
 
 1. Fixed the error when the default awk in system is `mawk`
-	- Related issue: <https://github.com/hangxingliu/wslgit/issues/8> (Thank @joaopluigi)
-
-### 2019-02-08
-
-1. Replaced WSL launch command from `bash` to `wsl`
-	- Related issue: <https://github.com/hangxingliu/wslgit/issues/3>
-2. Fixed error when executing `git.bat` without arguments
-3. Refactored `wslgit.sh` in order to convert path more correctly. 
-	- Supported convert path associated the drive be mounted manually
-	- Supported git long form argument and double dash (eg. `--file=xxx` and `--`)
-4. Internal change:
-	- transfer env variable `WSLGIT_SH_CWD` into WSL for set up cwd in WSL correctly.
-	- replace implementation of path convertor from `wslpath` to awk scripts and `mount` command.
+	- Related issue: <https://github.com/hangxingliu/wslgit/issues/8> (Thanks @joaopluigi)
 
 [CHANGELOG](CHANGELOG.md)
 
@@ -69,6 +83,11 @@ But why do I re-implement it by scripts, because I hope the wslgit tools could s
 ## Author
 
 [LiuYue (@hangxingliu)](https://github.com/hangxingliu)
+
+## Contributors
+
+- [Joao Paulo Luigi Luiz (@joaopluigi)](https://github.com/joaopluigi)
+- [@rennex](https://github.com/rennex)
 
 ## License
 

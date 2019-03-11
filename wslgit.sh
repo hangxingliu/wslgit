@@ -2,7 +2,7 @@
 
 # =========================================
 #  Name:    wslgit.sh
-#  Update:  2019-03-06
+#  Update:  2019-03-11
 #  License: GPL-3.0
 #  Author:  Liu Yue (hangxingliu@gmail.com)
 #
