@@ -104,7 +104,7 @@ function to_win_path_by_awk() {
 	"$AWK" -v _mount="$MOUNTED_DRVFS" 'BEGIN { mount_len = split(_mount, mount_list, "\n"); }
 		{
 			for(i = 1; i <= mount_len ; i += 2 ) {
-				if(gsub(mount_list[i+1], mount_list[i]) > 0) {
+				if(sub(mount_list[i+1], mount_list[i]) > 0) {
 					gsub("/", "\\");
 					break;
 				}
