@@ -96,7 +96,10 @@ start-test() {
 	if [[ -d tmp-test-repo ]]; then rm -rf tmp-test-repo || throw; fi
 	mkdir -p tmp-test-repo || throw;
 	pushd "tmp-test-repo" || throw;
-	../tmp.sh init || throw;
+
+	echo "Initialized empty Git repository in C:\\test-ci\\tmp-test-repo\\.git\\" > tmp-expected.log;
+	../tmp.sh init | tee tmp-actual.log || throw;
+	assert-expected-actual;
 
 	print-test-header "git add file";
 	echo "# Just test" > 'this file.txt';

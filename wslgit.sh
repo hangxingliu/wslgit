@@ -154,7 +154,7 @@ convert_output=false;
 after_double_dash=false;
 for arg in "$@"; do
 	if [[ "$after_double_dash" != true ]]; then
-		if [[ "$arg" == "rev-parse" ]] || [[ "$arg" == "remote" ]]; then
+		if [[ "$arg" == "rev-parse" ]] || [[ "$arg" == "remote" ]] || [[ "$arg" == "init" ]]; then
 			convert_output=true;
 		fi
 		# convert long form argument
