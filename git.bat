@@ -31,9 +31,9 @@ if [%1] == [] goto WITHOUT_ARGS
 	set args=%*
 	set "args=%args:\=\\%"
 
-	wsl env "WSLGIT_SH_CWD=%currentdir%" wslgit.sh %args%
+	wsl bash -ic 'env "WSLGIT_SH_CWD=%currentdir%" wslgit.sh %args%'
 	exit /b %errorlevel%
 
 :WITHOUT_ARGS
-	wsl env "WSLGIT_SH_CWD=%currentdir%" wslgit.sh
+	wsl bash -ic 'env "WSLGIT_SH_CWD=%currentdir%" wslgit.sh'
 	exit /b %errorlevel%
