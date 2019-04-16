@@ -47,7 +47,11 @@ function get_mounted_drvfs() {
 		if(split($0, lr, "type drvfs") < 2) next;
 		if(split(lr[1], part, "on") < 2) next;
 
-		drive = trim(part[1]); mount_to = trim(part[2]);
+		# Windows version 19H1 and onward outputs a backslash on mount -t drvfs:
+		#   C:\ on /mnt/c type drvfs (rw,noatime,uid=1000,gid=1000,case=off)
+		drive = trim(substr(part[1],1,2));
+		mount_to = trim(part[2]);
+		
 		print toupper(drive) "\n" mount_to;
 	}';
 	# endregion need-to-be-replaced-in-unit-test
