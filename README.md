@@ -39,6 +39,12 @@ If you want disable interactive shell to reduce launch time, you can set Windows
 
 ## Update
 
+### 2019-04-16
+
+1. Fixed bug caused by Windows 10 19H1 changed the output of `mount` command 
+	- Related pull request: <https://github.com/hangxingliu/wslgit/pull/13> (Thanks @kiroushi)
+	- Related issue: <https://github.com/hangxingliu/wslgit/issues/10>
+
 ### 2019-03-11
 
 1. **BREAKING CHANGE:** Start git installed in WSL in interactive mode. 
@@ -47,10 +53,6 @@ If you want disable interactive shell to reduce launch time, you can set Windows
 	- Related issue: <https://github.com/hangxingliu/wslgit/issues/11> (Thanks @rennex)
 3. Added path converting for the output of `git init`
 
-### 2019-03-06
-
-1. Fixed the error when the default awk in system is `mawk`
-	- Related issue: <https://github.com/hangxingliu/wslgit/issues/8> (Thanks @joaopluigi)
 
 [CHANGELOG](CHANGELOG.md)
 
@@ -86,6 +88,7 @@ If you want disable interactive shell to reduce launch time, you can set Windows
 
 ## Contributors
 
+- [@kiroushi](https://github.com/kiroushi)
 - [Joao Paulo Luigi Luiz (@joaopluigi)](https://github.com/joaopluigi)
 - [@rennex](https://github.com/rennex)
 

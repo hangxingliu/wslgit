@@ -2,7 +2,7 @@
 
 # =========================================
 #  Name:    wslgit.sh
-#  Update:  2019-03-11
+#  Update:  2019-04-16
 #  License: GPL-3.0
 #  Author:  Liu Yue (hangxingliu@gmail.com)
 #
@@ -51,7 +51,7 @@ function get_mounted_drvfs() {
 		#   C:\ on /mnt/c type drvfs (rw,noatime,uid=1000,gid=1000,case=off)
 		drive = trim(substr(part[1],1,2));
 		mount_to = trim(part[2]);
-		
+
 		print toupper(drive) "\n" mount_to;
 	}';
 	# endregion need-to-be-replaced-in-unit-test
