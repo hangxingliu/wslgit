@@ -2,7 +2,7 @@
 
 # =========================================
 #  Name:    wslgit.sh
-#  Update:  2019-04-16
+#  Update:  2019-06-01
 #  License: GPL-3.0
 #  Author:  Liu Yue (hangxingliu@gmail.com)
 #
@@ -124,14 +124,20 @@ function to_win_path_by_awk() {
 #  |_| |_| |_|\__,_|_|_| |_|
 # ==========================================
 
-# Log for debugging
+#region log
 if [[ "$WSLGIT_SH_LOG" != false ]]; then
-	log_file="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/wslgit.log";
-	echo ">>> $(date "+%y-%m-%d %H:%M:%S")" >> "$log_file";
-	echo "WSLGIT_SH_CWD: ${WSLGIT_SH_CWD}" >> "$log_file";
-	echo "Arguments:" >> "$log_file"
-	for arg in "$@"; do echo "  $arg" >> "$log_file"; done
+	log_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )";
+	[[ -w "$log_dir" ]] || log_dir="/tmp";
+	[[ -w "$log_dir" ]] && log_file="${log_dir}/wslgit.log" || log_file="/dev/null";
+
+	echo ">>> $(date "+%y-%m-%d %H:%M:%S")
+	WSLGIT_SH_CWD: {${WSLGIT_SH_CWD}}
+	DRVFS: {$(mount -t drvfs)}
+	MOUNTED_DRVFS: {${MOUNTED_DRVFS}}
+	Arguments:" >> "$log_file";
+	for arg in "$@"; do echo "		$arg" >> "$log_file"; done
 fi
+#endregion log
 
 # Fix cwd(currency working directory) by environmnt variable WSLGIT_SH_CWD
 # Sample case:
@@ -176,13 +182,14 @@ for arg in "$@"; do
 	argv=$(($argv+1));
 done
 
-# Log for debugging
+#region log
 if [[ "$WSLGIT_SH_LOG" != false ]]; then
-	echo "cwd: $(pwd)" >> "$log_file";
-	echo "Converted arguments:" >> "$log_file";
+	echo "	PWD: $(pwd)
+	Converted Arguments:" >> "$log_file";
 	for arg in "${git_args[@]}"; do echo "  $arg" >> "$log_file"; done
 	echo "<<<" >> "$log_file";
 fi
+#endregion log
 
 # Execute git with git_args
 function execut_git() { git "${git_args[@]}" <&0; return $?; }
