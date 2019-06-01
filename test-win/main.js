@@ -181,7 +181,7 @@ async function test() {
 
 	async function listWslDrvFs() {
 		await vitalExec('wsl', ['mount', '-t', 'drvfs']);
-		const REGEXP = /^(\w):\s+on\s+(.+)\s+type\s+drvfs/;
+		const REGEXP = /^(\w):\\?\s+on\s+(.+)\s+type\s+drvfs/;
 		const drvs = last.stdout.split(/[\r\n]+/).filter(it => it);
 		assert(drvs.length > 0, 'drive list is not empty');
 		drvs.forEach((drv, i) =>
