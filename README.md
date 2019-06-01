@@ -10,14 +10,9 @@ But why do I re-implement it by scripts, because I hope the wslgit tools could s
 ## Usage
 
 1. Please ensure `git` is installed in your WSL.
-2. Copy `wslgit.sh` to the `/usr/bin/` directory in your WSL.
-3. Add the following config into yout VSCode Settings (Remember to replace the path)
-
-``` json
-{
-	"git.path": "C:\\path\\to\\git.bat"
-}
-```
+2. Copy `wslgit.sh` to the `/usr/bin/` or `~/bin` directory in your WSL.
+3. Add the following config into your VSCode Settings.
+	- `{ "git.path": "C:\\path\\to\\git.bat" }`
 
 ### 🐢 Feeling slowly? (Disable interactive shell)
 
