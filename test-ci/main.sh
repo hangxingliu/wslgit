@@ -31,7 +31,7 @@ generate-wslgit-with-mock-mount-info() {
 		/^\s+#\s*endregion\s+'$UNIT_TEST_SIGN'/ { ignore=0; next; }
 		ignore { next; }
 		{ print $0; }
-	' ../wslgit.sh > tmp.sh || throw "generate tmp.sh for ci test failed!"
+	' ../wslgit.dev.sh > tmp.sh || throw "generate tmp.sh for ci test failed!"
 	chmod +x tmp.sh || throw;
 }
 
