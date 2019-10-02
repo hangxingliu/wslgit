@@ -23,13 +23,17 @@ AWK="$(which gawk)";
 [[ -z "$AWK" ]] && echo "fatal: \"awk\" is not installed in WSL!" >&2 && exit 1;
 
 function get_mounted_drvfs() {
-	mount -t drvfs | "$AWK" '
+	mount -t drvfs,9p | "$AWK" '
 	function trim(s) { gsub(/^[ \t]+/, "", s); gsub(/[ \t]+$/, "", s); return s; }
 	{
-		if(split($0, lr, "type drvfs") < 2) next;
-		if(split(lr[1], part, "on") < 2) next;
+		if(split($0, lr, " type drvfs ") < 2) {
+			if(split($0, lr, " type 9p ") < 2) next;
+		}
+		if(split(lr[1], part, " on ") < 2) next;
 
-		drive = trim(substr(part[1],1,2));
+		if(substr(part[1], 2, 1) != ":") next;
+
+		drive = trim(substr(part[1], 1, 2));
 		mount_to = trim(part[2]);
 
 		print toupper(drive) "\n" mount_to;

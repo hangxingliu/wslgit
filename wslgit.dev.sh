@@ -41,15 +41,21 @@ function get_mounted_drvfs() {
 	# region need-to-be-replaced-in-unit-test
 	#     The previous line is used for mark the following statments
 	#     need to be replaced to other implementation for unit test (travis-CI)
-	mount -t drvfs | "$AWK" '
+	mount -t drvfs,9p | "$AWK" '
 	function trim(s) { gsub(/^[ \t]+/, "", s); gsub(/[ \t]+$/, "", s); return s; }
 	{
-		if(split($0, lr, "type drvfs") < 2) next;
-		if(split(lr[1], part, "on") < 2) next;
+		if(split($0, lr, " type drvfs ") < 2) {
+			# WSL2 mounts Windows drives as type 9p
+			if(split($0, lr, " type 9p ") < 2) next;
+		}
+		if(split(lr[1], part, " on ") < 2) next;
+
+		# Skip 9p mounts that are not a single drive letter (WSL2 mounts "tools on /init type 9p")
+		if(substr(part[1], 2, 1) != ":") next;
 
 		# Windows version 19H1 and onward outputs a backslash on mount -t drvfs:
 		#   C:\ on /mnt/c type drvfs (rw,noatime,uid=1000,gid=1000,case=off)
-		drive = trim(substr(part[1],1,2));
+		drive = trim(substr(part[1], 1, 2));
 		mount_to = trim(part[2]);
 
 		print toupper(drive) "\n" mount_to;
