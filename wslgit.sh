@@ -61,7 +61,8 @@ function to_unix_path_by_awk() {
 					exit;
 				}
 			}
-			print $0;
+			remain = $0; gsub(/\\/, "/", remain); gsub("//", "/", remain);
+			print remain;
 			exit;
 		}';
 }
